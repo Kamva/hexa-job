@@ -1,9 +1,10 @@
-package faktory
+package kfaktory
 
 import (
 	"errors"
 	"github.com/Kamva/gutil"
 	"github.com/Kamva/kitty"
+	kjob "github.com/Kamva/kitty-job"
 	"github.com/Kamva/tracer"
 	"github.com/contribsys/faktory/client"
 	faktoryworker "github.com/contribsys/faktory_worker_go"
@@ -25,7 +26,7 @@ type (
 	}
 )
 
-func (j *jobs) prepare(c kitty.Context, job *kitty.Job) *client.Job {
+func (j *jobs) prepare(c kitty.Context, job *kjob.Job) *client.Job {
 
 	if job.Queue == "" {
 		job.Queue = "default"
@@ -44,7 +45,7 @@ func (j *jobs) prepare(c kitty.Context, job *kitty.Job) *client.Job {
 	}
 }
 
-func (j *jobs) Push(ctx kitty.Context, job *kitty.Job) error {
+func (j *jobs) Push(ctx kitty.Context, job *kjob.Job) error {
 	if job == nil || job.Name == "" {
 		return tracer.Trace(errors.New("job is not valid (enter job name please)"))
 	}
@@ -54,10 +55,10 @@ func (j *jobs) Push(ctx kitty.Context, job *kitty.Job) error {
 	})
 }
 
-func (w *worker) handler(h kitty.JobHandlerFunc) faktoryworker.Perform {
+func (w *worker) handler(h kjob.JobHandlerFunc) faktoryworker.Perform {
 	return func(ctx faktoryworker.Context, args ...interface{}) error {
 
-		var payload kitty.Payload
+		var payload kjob.Payload
 		ctxMap := args[0].(map[string]interface{})
 		err := gutil.MapToStruct(args[1].(map[string]interface{}), &payload)
 
@@ -74,7 +75,7 @@ func (w *worker) handler(h kitty.JobHandlerFunc) faktoryworker.Perform {
 	}
 }
 
-func (w *worker) Register(name string, h kitty.JobHandlerFunc) error {
+func (w *worker) Register(name string, h kjob.JobHandlerFunc) error {
 	w.w.Register(name, w.handler(h))
 	return nil
 }
@@ -93,12 +94,12 @@ func (w *worker) Process(queues ...string) error {
 }
 
 // NewFaktoryJobsDriver returns new instance of Jobs driver for the faktory
-func NewFaktoryJobsDriver(p *client.Pool) kitty.Jobs {
+func NewFaktoryJobsDriver(p *client.Pool) kjob.Jobs {
 	return &jobs{p}
 }
 
 // NewFaktoryWorkerDriver returns new instance of kitty Worker driver for the faktory
-func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf kitty.UserFinder, l kitty.Logger, t kitty.Translator) kitty.Worker {
+func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf kitty.UserFinder, l kitty.Logger, t kitty.Translator) kjob.Worker {
 	return &worker{
 		w:  w,
 		uf: uf,
@@ -107,5 +108,5 @@ func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf kitty.UserFinder, l kit
 	}
 }
 
-var _ kitty.Jobs = &jobs{}
-var _ kitty.Worker = &worker{}
+var _ kjob.Jobs = &jobs{}
+var _ kjob.Worker = &worker{}

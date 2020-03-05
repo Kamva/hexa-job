@@ -3,7 +3,7 @@
 // define workers to process background
 // jobs.
 //--------------------------------
-package kittyjob
+package kjob
 
 import "github.com/Kamva/kitty"
 
