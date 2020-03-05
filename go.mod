@@ -1,4 +1,4 @@
-module github.com/Kamva/kittyjob
+module github.com/Kamva/kitty-job
 
 go 1.13
 
