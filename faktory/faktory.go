@@ -1,4 +1,4 @@
-package kfaktory
+package hexafaktory
 
 import (
 	"errors"
