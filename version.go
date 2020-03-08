@@ -1,6 +1,6 @@
-package kjob
+package hjob
 
-// Version is kitty job current version.
+// Version is the package current version.
 const Version = "1.0.0"
 
 

@@ -3,8 +3,8 @@ package kfaktory
 import (
 	"errors"
 	"github.com/Kamva/gutil"
-	"github.com/Kamva/kitty"
-	kjob "github.com/Kamva/kitty-job"
+	"github.com/Kamva/hexa"
+	"github.com/Kamva/hexa-job"
 	"github.com/Kamva/tracer"
 	"github.com/contribsys/faktory/client"
 	faktoryworker "github.com/contribsys/faktory_worker_go"
@@ -12,21 +12,21 @@ import (
 )
 
 type (
-	// jobs is implementation of kitty Jobs using faktory
+	// jobs is implementation of hexa Jobs using faktory
 	jobs struct {
 		p *client.Pool
 	}
 
-	// worker is implementation of kitty worker using faktory.
+	// worker is implementation of hexa worker using faktory.
 	worker struct {
 		w  *faktoryworker.Manager
-		uf kitty.UserFinder
-		l  kitty.Logger
-		t  kitty.Translator
+		uf hexa.UserFinder
+		l  hexa.Logger
+		t  hexa.Translator
 	}
 )
 
-func (j *jobs) prepare(c kitty.Context, job *kjob.Job) *client.Job {
+func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
 
 	if job.Queue == "" {
 		job.Queue = "default"
@@ -45,7 +45,7 @@ func (j *jobs) prepare(c kitty.Context, job *kjob.Job) *client.Job {
 	}
 }
 
-func (j *jobs) Push(ctx kitty.Context, job *kjob.Job) error {
+func (j *jobs) Push(ctx hexa.Context, job *hjob.Job) error {
 	if job == nil || job.Name == "" {
 		return tracer.Trace(errors.New("job is not valid (enter job name please)"))
 	}
@@ -55,10 +55,9 @@ func (j *jobs) Push(ctx kitty.Context, job *kjob.Job) error {
 	})
 }
 
-func (w *worker) handler(h kjob.JobHandlerFunc) faktoryworker.Perform {
+func (w *worker) handler(h hjob.JobHandlerFunc) faktoryworker.Perform {
 	return func(ctx faktoryworker.Context, args ...interface{}) error {
-
-		var payload kjob.Payload
+		var payload hjob.Payload
 		ctxMap := args[0].(map[string]interface{})
 		err := gutil.MapToStruct(args[1].(map[string]interface{}), &payload)
 
@@ -66,7 +65,7 @@ func (w *worker) handler(h kjob.JobHandlerFunc) faktoryworker.Perform {
 			return tracer.Trace(err)
 		}
 
-		kCtx, err := kitty.CtxFromMap(ctxMap, w.uf, w.l, w.t)
+		kCtx, err := hexa.CtxFromMap(ctxMap, w.uf, w.l, w.t)
 
 		if err != nil {
 			return tracer.Trace(err)
@@ -75,7 +74,7 @@ func (w *worker) handler(h kjob.JobHandlerFunc) faktoryworker.Perform {
 	}
 }
 
-func (w *worker) Register(name string, h kjob.JobHandlerFunc) error {
+func (w *worker) Register(name string, h hjob.JobHandlerFunc) error {
 	w.w.Register(name, w.handler(h))
 	return nil
 }
@@ -94,12 +93,12 @@ func (w *worker) Process(queues ...string) error {
 }
 
 // NewFaktoryJobsDriver returns new instance of Jobs driver for the faktory
-func NewFaktoryJobsDriver(p *client.Pool) kjob.Jobs {
+func NewFaktoryJobsDriver(p *client.Pool) hjob.Jobs {
 	return &jobs{p}
 }
 
-// NewFaktoryWorkerDriver returns new instance of kitty Worker driver for the faktory
-func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf kitty.UserFinder, l kitty.Logger, t kitty.Translator) kjob.Worker {
+// NewFaktoryWorkerDriver returns new instance of hexa Worker driver for the faktory
+func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf hexa.UserFinder, l hexa.Logger, t hexa.Translator) hjob.Worker {
 	return &worker{
 		w:  w,
 		uf: uf,
@@ -108,5 +107,5 @@ func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf kitty.UserFinder, l kit
 	}
 }
 
-var _ kjob.Jobs = &jobs{}
-var _ kjob.Worker = &worker{}
+var _ hjob.Jobs = &jobs{}
+var _ hjob.Worker = &worker{}

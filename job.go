@@ -3,14 +3,14 @@
 // define workers to process background
 // jobs.
 //--------------------------------
-package kjob
+package hjob
 
-import "github.com/Kamva/kitty"
+import "github.com/Kamva/hexa"
 
 type (
 
 	// JobHandlerFunc is the handler of each job in the worker.
-	JobHandlerFunc func(kitty.Context, Payload) error
+	JobHandlerFunc func(hexa.Context, Payload) error
 
 	// Job is the new to push to the queue by Jobs interface
 	Job struct {
@@ -24,8 +24,8 @@ type (
 	}
 
 	Payload struct {
-		Header kitty.Map `json:"header"`
-		Data   kitty.Map `json:"data"`
+		Header hexa.Map `json:"header"`
+		Data   hexa.Map `json:"data"`
 	}
 
 	// Worker is the background jobs worker
@@ -43,7 +43,7 @@ type (
 	// Jobs pushes jobs to process by worker.
 	Jobs interface {
 		// Push push job to the default queue
-		Push(kitty.Context, *Job) error
+		Push(hexa.Context, *Job) error
 	}
 )
 
