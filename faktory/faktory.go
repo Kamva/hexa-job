@@ -14,15 +14,14 @@ import (
 type (
 	// jobs is implementation of hexa Jobs using faktory
 	jobs struct {
-		p *client.Pool
+		p                   *client.Pool
+		ctxExporterImporter hexa.ContextExporterImporter
 	}
 
 	// worker is implementation of hexa worker using faktory.
 	worker struct {
-		w  *faktoryworker.Manager
-		uf hexa.UserFinder
-		l  hexa.Logger
-		t  hexa.Translator
+		w                   *faktoryworker.Manager
+		ctxExporterImporter hexa.ContextExporterImporter
 	}
 )
 
@@ -32,7 +31,7 @@ func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
 		job.Queue = "default"
 	}
 
-	ctxMap := c.ToMap()
+	ctxMap, _ := j.ctxExporterImporter.Export(c)
 	return &client.Job{
 		Jid:       client.RandomJid(),
 		Type:      job.Name,
@@ -65,7 +64,7 @@ func (w *worker) handler(h hjob.JobHandlerFunc) faktoryworker.Perform {
 			return tracer.Trace(err)
 		}
 
-		kCtx, err := hexa.CtxFromMap(ctxMap, w.uf, w.l, w.t)
+		kCtx, err := w.ctxExporterImporter.Import(ctxMap)
 
 		if err != nil {
 			return tracer.Trace(err)
@@ -93,17 +92,15 @@ func (w *worker) Process(queues ...string) error {
 }
 
 // NewFaktoryJobsDriver returns new instance of Jobs driver for the faktory
-func NewFaktoryJobsDriver(p *client.Pool) hjob.Jobs {
-	return &jobs{p}
+func NewFaktoryJobsDriver(p *client.Pool, ctxExporterImporter hexa.ContextExporterImporter) hjob.Jobs {
+	return &jobs{p: p, ctxExporterImporter: ctxExporterImporter}
 }
 
 // NewFaktoryWorkerDriver returns new instance of hexa Worker driver for the faktory
-func NewFaktoryWorkerDriver(w *faktoryworker.Manager, uf hexa.UserFinder, l hexa.Logger, t hexa.Translator) hjob.Worker {
+func NewFaktoryWorkerDriver(w *faktoryworker.Manager, ctxExporterImporter hexa.ContextExporterImporter) hjob.Worker {
 	return &worker{
-		w:  w,
-		uf: uf,
-		l:  l,
-		t:  t,
+		w:                   w,
+		ctxExporterImporter: ctxExporterImporter,
 	}
 }
 
