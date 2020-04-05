@@ -10,28 +10,23 @@ import "github.com/Kamva/hexa"
 type (
 
 	// JobHandlerFunc is the handler of each job in the worker.
-	JobHandlerFunc func(hexa.Context, Payload) error
+	JobHandlerFunc func(ctx hexa.Context, payload interface{}) error
 
 	// Job is the new to push to the queue by Jobs interface
 	Job struct {
-		Payload
 		Name  string // required
 		Queue string
 		// Retry specify retry counts of the job.
 		// 0: means that throw job away (and dont push to dead queue) on first fail.
 		// -1: means that push job to the dead queue on first fail.
-		Retry int
-	}
-
-	Payload struct {
-		Header hexa.Map `json:"header"`
-		Data   hexa.Map `json:"data"`
+		Retry   int
+		Payload interface{} // It can be any struct.
 	}
 
 	// Worker is the background jobs worker
 	Worker interface {
 		// Register handler for new job
-		Register(name string, handlerFunc JobHandlerFunc) error
+		Register(name string, payloadInstance interface{}, handlerFunc JobHandlerFunc) error
 
 		// Set worker concurrency
 		Concurrency(c int) error
@@ -48,16 +43,16 @@ type (
 )
 
 // NewJob returns new job instance
-func NewJob(name string, p Payload) *Job {
-	return NewJobWithQueue(name, "default", p)
+func NewJob(name string, payload interface{}) *Job {
+	return NewJobWithQueue(name, "default", payload)
 }
 
 // NewJobWithQueue returns new job instance
-func NewJobWithQueue(name string, queue string, p Payload) *Job {
+func NewJobWithQueue(name string, queue string, p interface{}) *Job {
 	return &Job{
-		Payload: p,
 		Name:    name,
 		Queue:   queue,
 		Retry:   4,
+		Payload: p,
 	}
 }

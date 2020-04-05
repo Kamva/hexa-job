@@ -22,6 +22,8 @@ type (
 	worker struct {
 		w                   *faktoryworker.Manager
 		ctxExporterImporter hexa.ContextExporterImporter
+		// payloadInstances keep instance type of the payload base on each event name.
+		payloadInstances hexa.Map
 	}
 )
 
@@ -54,11 +56,14 @@ func (j *jobs) Push(ctx hexa.Context, job *hjob.Job) error {
 	})
 }
 
-func (w *worker) handler(h hjob.JobHandlerFunc) faktoryworker.Perform {
+func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Perform {
 	return func(ctx faktoryworker.Context, args ...interface{}) error {
-		var payload hjob.Payload
+		var payload, err = gutil.NewInstanceByValue(w.payloadInstances[jobName])
+		if err != nil {
+			return err
+		}
 		ctxMap := args[0].(map[string]interface{})
-		err := gutil.MapToStruct(args[1].(map[string]interface{}), &payload)
+		err = gutil.MapToStruct(args[1].(map[string]interface{}), payload)
 
 		if err != nil {
 			return tracer.Trace(err)
@@ -73,8 +78,9 @@ func (w *worker) handler(h hjob.JobHandlerFunc) faktoryworker.Perform {
 	}
 }
 
-func (w *worker) Register(name string, h hjob.JobHandlerFunc) error {
-	w.w.Register(name, w.handler(h))
+func (w *worker) Register(name string, payloadInstance interface{}, h hjob.JobHandlerFunc) error {
+	w.payloadInstances[name] = payloadInstance
+	w.w.Register(name, w.handler(name, h))
 	return nil
 }
 
@@ -101,6 +107,7 @@ func NewFaktoryWorkerDriver(w *faktoryworker.Manager, ctxExporterImporter hexa.C
 	return &worker{
 		w:                   w,
 		ctxExporterImporter: ctxExporterImporter,
+		payloadInstances:    make(hexa.Map),
 	}
 }
 

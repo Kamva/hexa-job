@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-type PayloadData struct {
+type Payload struct {
 	Name string `json:"name" mapstructure:"name"`
 }
 
@@ -42,12 +42,7 @@ func send() {
 
 	ctx := hexa.NewCtx(nil, "test-correlation-id", "en", hexa.NewGuest(), logger, translator)
 
-	payload := hjob.Payload{
-		Header: hexa.Map{"foo-header": "bar"},
-		Data:   gutil.StructToMap(PayloadData{Name: "mehran"}),
-	}
-
-	err = jobs.Push(ctx, hjob.NewJob(jobName, payload))
+	err = jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
 	gutil.PanicErr(err)
 }
 
@@ -55,15 +50,14 @@ func serve() {
 	w := worker.NewManager()
 	server := hexafaktory.NewFaktoryWorkerDriver(w, cExporter)
 
-	gutil.PanicErr(server.Register(jobName, sayHello))
+	gutil.PanicErr(server.Register(jobName, Payload{}, sayHello))
 	gutil.PanicErr(server.Process("default"))
 }
 
-func sayHello(context hexa.Context, payload hjob.Payload) error {
+func sayHello(context hexa.Context, payload interface{}) error {
 	fmt.Printf("%#v\n\n", context)
 	fmt.Printf("%#v\n\n", payload)
-	var p PayloadData
-	gutil.PanicErr(gutil.MapToStruct(payload.Data, &p))
+	var p = payload.(*Payload)
 	fmt.Printf("hello %s :) \n\n", p.Name)
 	return nil
 }
