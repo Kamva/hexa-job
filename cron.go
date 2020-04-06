@@ -22,7 +22,7 @@ type (
 	// CronJobs get your cron-jobs specs
 	CronJobs interface {
 		// Register handler for new cron job
-		Register(spec string, cJob CronJob, handler CronJobHandlerFunc) error
+		Register(spec string, cJob *CronJob, handler CronJobHandlerFunc) error
 		Start() error
 		Stop() (error, context.Context)
 	}

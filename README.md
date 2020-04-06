@@ -6,9 +6,10 @@ go get github.com/Kamva/hexa-job
 ```
 
 #### Proposal
-- [ ] Add pulsar driver  
+- [ ] Add pulsar driver   
 
 #### Todo:
-- [ ] Write Tests
+- [ ] write sample code to shutdown cron jobs server gracefully.
+- [ ] Write Tests.
 - [ ] Add badges to readme.
-- [ ] CI 
+- [ ] CI.

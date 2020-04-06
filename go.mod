@@ -8,5 +8,5 @@ require (
 	github.com/Kamva/tracer v0.0.0-20200227202933-3d5974771f25
 	github.com/contribsys/faktory v1.2.0-1
 	github.com/contribsys/faktory_worker_go v1.0.2-0.20200224171227-14a9992ad00e
-	github.com/robfig/cron/v3 v3.0.0 // indirect
+	github.com/robfig/cron/v3 v3.0.0
 )
