@@ -12,7 +12,7 @@ type (
 	// JobHandlerFunc is the handler of each job in the worker.
 	JobHandlerFunc func(ctx hexa.Context, payload interface{}) error
 
-	// Job is the new to push to the queue by Jobs interface
+	// Job is a new instance of job to push to the queue by Jobs interface
 	Job struct {
 		Name  string // required
 		Queue string

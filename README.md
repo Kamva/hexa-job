@@ -9,8 +9,6 @@ go get github.com/Kamva/hexa-job
 - [ ] Add pulsar driver  
 
 #### Todo:
-- [ ] On worker and jobs implementations get queue prefix 
-(in both jobs and worker, to distinct microservices queues).
 - [ ] Write Tests
 - [ ] Add badges to readme.
 - [ ] CI 
