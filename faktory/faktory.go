@@ -1,6 +1,7 @@
 package hexafaktory
 
 import (
+	"context"
 	"errors"
 	"github.com/Kamva/gutil"
 	"github.com/Kamva/hexa"
@@ -57,7 +58,7 @@ func (j *jobs) Push(ctx hexa.Context, job *hjob.Job) error {
 }
 
 func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Perform {
-	return func(ctx faktoryworker.Context, args ...interface{}) error {
+	return func(_ context.Context, args ...interface{}) error {
 		var payload, err = gutil.NewInstanceByValue(w.payloadInstances[jobName])
 		if err != nil {
 			return err
