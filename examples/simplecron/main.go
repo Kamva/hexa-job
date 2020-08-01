@@ -8,8 +8,8 @@ import (
 	hexafaktory "github.com/Kamva/hexa-job/faktory"
 	hexarobfig "github.com/Kamva/hexa-job/robfig"
 	"github.com/Kamva/hexa/db/mgmadapter"
-	"github.com/Kamva/hexa/hexalogger"
 	"github.com/Kamva/hexa/hexatranslator"
+	"github.com/Kamva/hexa/hlog"
 	faktory "github.com/contribsys/faktory/client"
 	worker "github.com/contribsys/faktory_worker_go"
 	"github.com/robfig/cron/v3"
@@ -22,7 +22,7 @@ func init() {
 	_ = os.Setenv("FAKTORY_URL", "tcp://localhost:7419")
 }
 
-var logger = hexalogger.NewPrinterDriver()
+var logger = hlog.NewPrinterDriver()
 var translator = hexatranslator.NewEmptyDriver()
 var cExporter = hexa.NewCtxExporterImporter(hexa.NewUserExporterImporter(mgmadapter.EmptyID), logger, translator)
 var cronJobName = "example-cron-job"

@@ -7,8 +7,8 @@ import (
 	hjob "github.com/Kamva/hexa-job"
 	hexafaktory "github.com/Kamva/hexa-job/faktory"
 	"github.com/Kamva/hexa/db/mgmadapter"
-	"github.com/Kamva/hexa/hexalogger"
 	"github.com/Kamva/hexa/hexatranslator"
+	"github.com/Kamva/hexa/hlog"
 	faktory "github.com/contribsys/faktory/client"
 	worker "github.com/contribsys/faktory_worker_go"
 	"os"
@@ -23,7 +23,7 @@ func init() {
 	_ = os.Setenv("FAKTORY_URL", "tcp://localhost:7419")
 }
 
-var logger = hexalogger.NewPrinterDriver()
+var logger = hlog.NewPrinterDriver()
 var translator = hexatranslator.NewEmptyDriver()
 var cExporter = hexa.NewCtxExporterImporter(hexa.NewUserExporterImporter(mgmadapter.EmptyID), logger, translator)
 var jobName = "example-job"
