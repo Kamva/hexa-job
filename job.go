@@ -5,7 +5,7 @@
 //--------------------------------
 package hjob
 
-import "github.com/Kamva/hexa"
+import "github.com/kamva/hexa"
 
 type (
 

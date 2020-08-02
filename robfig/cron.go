@@ -2,9 +2,9 @@ package hexarobfig
 
 import (
 	"context"
-	"github.com/Kamva/hexa"
-	hjob "github.com/Kamva/hexa-job"
-	"github.com/Kamva/tracer"
+	"github.com/kamva/hexa"
+	hjob "github.com/kamva/hexa-job"
+	"github.com/kamva/tracer"
 	"github.com/robfig/cron/v3"
 )
 

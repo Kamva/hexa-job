@@ -2,7 +2,7 @@ package hjob
 
 import (
 	"context"
-	"github.com/Kamva/hexa"
+	"github.com/kamva/hexa"
 )
 
 type (
