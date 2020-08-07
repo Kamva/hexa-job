@@ -59,7 +59,7 @@ func (j *jobs) Push(ctx hexa.Context, job *hjob.Job) error {
 
 func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Perform {
 	return func(_ context.Context, args ...interface{}) error {
-		var payload, err = gutil.NewInstanceByValue(w.payloadInstances[jobName])
+		var payload, err = gutil.ValuePtr(w.payloadInstances[jobName])
 		if err != nil {
 			return err
 		}
