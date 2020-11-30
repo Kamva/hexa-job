@@ -23,7 +23,7 @@ func init() {
 	_ = os.Setenv("FAKTORY_URL", "tcp://localhost:7419")
 }
 
-var logger = hlog.NewPrinterDriver()
+var logger = hlog.NewPrinterDriver(hlog.DebugLevel)
 var translator = hexatranslator.NewEmptyDriver()
 var cExporter = hexa.NewCtxExporterImporter(hexa.NewUserExporterImporter(mgmadapter.EmptyID), logger, translator)
 var jobName = "example-job"
