@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
+	"github.com/kamva/hexa/hlog"
 	"github.com/kamva/tracer"
 	"github.com/robfig/cron/v3"
 )
@@ -82,8 +83,8 @@ func (c *cronJobs) job(job *hjob.CronJob) *hjob.Job {
 
 func (c *cronJobs) reportFailedPush(job *hjob.CronJob) {
 	if c.logger != nil {
-		c.logger.WithFields("job_queue", job.Queue, "job_name", job.Name).
-			Error("failed to push cron job to the jobs service.")
+		c.logger.Error("failed to push cron job to the jobs service.",
+			hlog.String("job_queue", job.Queue), hlog.String("job_name", job.Name))
 	}
 }
 
