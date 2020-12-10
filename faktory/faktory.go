@@ -3,26 +3,27 @@ package hexafaktory
 import (
 	"context"
 	"errors"
+	"time"
+
+	"github.com/contribsys/faktory/client"
+	faktoryworker "github.com/contribsys/faktory_worker_go"
 	"github.com/kamva/gutil"
 	"github.com/kamva/hexa"
 	"github.com/kamva/hexa-job"
 	"github.com/kamva/tracer"
-	"github.com/contribsys/faktory/client"
-	faktoryworker "github.com/contribsys/faktory_worker_go"
-	"time"
 )
 
 type (
 	// jobs is implementation of hexa Jobs using faktory
 	jobs struct {
-		p                   *client.Pool
-		ctxExporterImporter hexa.ContextExporterImporter
+		p          *client.Pool
+		propagator hexa.ContextPropagator
 	}
 
 	// worker is implementation of hexa worker using faktory.
 	worker struct {
-		w                   *faktoryworker.Manager
-		ctxExporterImporter hexa.ContextExporterImporter
+		w *faktoryworker.Manager
+		p hexa.ContextPropagator
 		// payloadInstances keep instance type of the payload base on each event name.
 		payloadInstances hexa.Map
 	}
@@ -34,16 +35,16 @@ func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
 		job.Queue = "default"
 	}
 
-	ctxMap, _ := j.ctxExporterImporter.Export(c)
+	ctxData, _ := j.propagator.Extract(c)
 	return &client.Job{
 		Jid:       client.RandomJid(),
 		Type:      job.Name,
 		Queue:     job.Queue,
-		Args:      []interface{}{ctxMap, gutil.StructToMap(job.Payload)},
+		Args:      []interface{}{ctxData, gutil.StructToMap(job.Payload)},
 		CreatedAt: time.Now().UTC().Format(time.RFC3339Nano),
 		Retry:     job.Retry,
 		// We don't using this custom data in any middleware, but just put it here :)
-		Custom: ctxMap,
+		Custom: bytesMapToInterfaceMap(ctxData),
 	}
 }
 
@@ -69,13 +70,16 @@ func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Pe
 		if err != nil {
 			return tracer.Trace(err)
 		}
-
-		kCtx, err := w.ctxExporterImporter.Import(ctxMap)
-
+		bytesMap, err := interfaceMapToBytesMap(ctxMap)
 		if err != nil {
 			return tracer.Trace(err)
 		}
-		return h(kCtx, payload)
+
+		c, err := w.p.Inject(bytesMap, context.Background())
+		if err != nil {
+			return tracer.Trace(err)
+		}
+		return h(hexa.MustNewContextFromRawContext(c), payload)
 	}
 }
 
@@ -99,16 +103,16 @@ func (w *worker) Process(queues ...string) error {
 }
 
 // NewFaktoryJobsDriver returns new instance of Jobs driver for the faktory
-func NewFaktoryJobsDriver(p *client.Pool, ctxExporterImporter hexa.ContextExporterImporter) hjob.Jobs {
-	return &jobs{p: p, ctxExporterImporter: ctxExporterImporter}
+func NewFaktoryJobsDriver(p *client.Pool, propagator hexa.ContextPropagator) hjob.Jobs {
+	return &jobs{p: p, propagator: propagator}
 }
 
 // NewFaktoryWorkerDriver returns new instance of hexa Worker driver for the faktory
-func NewFaktoryWorkerDriver(w *faktoryworker.Manager, ctxExporterImporter hexa.ContextExporterImporter) hjob.Worker {
+func NewFaktoryWorkerDriver(w *faktoryworker.Manager, propagator hexa.ContextPropagator) hjob.Worker {
 	return &worker{
-		w:                   w,
-		ctxExporterImporter: ctxExporterImporter,
-		payloadInstances:    make(hexa.Map),
+		w:                w,
+		p:                propagator,
+		payloadInstances: make(hexa.Map),
 	}
 }
 

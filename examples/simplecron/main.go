@@ -2,19 +2,19 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
+	faktory "github.com/contribsys/faktory/client"
+	worker "github.com/contribsys/faktory_worker_go"
 	"github.com/kamva/gutil"
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
 	hexafaktory "github.com/kamva/hexa-job/faktory"
 	hexarobfig "github.com/kamva/hexa-job/robfig"
-	"github.com/kamva/hexa/db/mgmadapter"
 	"github.com/kamva/hexa/hexatranslator"
 	"github.com/kamva/hexa/hlog"
-	faktory "github.com/contribsys/faktory/client"
-	worker "github.com/contribsys/faktory_worker_go"
 	"github.com/robfig/cron/v3"
-	"os"
-	"time"
 )
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 
 var logger = hlog.NewPrinterDriver(hlog.DebugLevel)
 var translator = hexatranslator.NewEmptyDriver()
-var cExporter = hexa.NewCtxExporterImporter(hexa.NewUserExporterImporter(mgmadapter.EmptyID), logger, translator)
+var propagator = hexa.NewContextPropagator(logger, translator)
 var cronJobName = "example-cron-job"
 
 func main() {
@@ -32,8 +32,8 @@ func main() {
 	w := worker.NewManager()
 	gutil.PanicErr(err)
 
-	jobs := hexafaktory.NewFaktoryJobsDriver(client, cExporter)
-	jobWorker := hexafaktory.NewFaktoryWorkerDriver(w, cExporter)
+	jobs := hexafaktory.NewFaktoryJobsDriver(client, propagator)
+	jobWorker := hexafaktory.NewFaktoryWorkerDriver(w, propagator)
 	cronInstance := cron.New()
 
 	cronJobs := hexarobfig.New(hexarobfig.CronJobsOptions{
@@ -50,9 +50,14 @@ func main() {
 }
 
 func ctxGenerator() hexa.Context {
-	return hexa.NewCtx(nil, "test-cron-correlation-id", "en", hexa.NewGuest(), logger, translator)
+	return hexa.NewContext(hexa.ContextParams{
+		CorrelationId: "test-cron-correlation-id",
+		Locale:        "en",
+		User:          hexa.NewGuest(),
+		Logger:        logger,
+		Translator:    translator,
+	})
 }
-
 func sayHello(ctx hexa.Context) error {
 	fmt.Println("hello from cron job :) at:", time.Now())
 	fmt.Println(ctx.CorrelationID())

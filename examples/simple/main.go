@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
+
+	faktory "github.com/contribsys/faktory/client"
+	worker "github.com/contribsys/faktory_worker_go"
 	"github.com/kamva/gutil"
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
 	hexafaktory "github.com/kamva/hexa-job/faktory"
-	"github.com/kamva/hexa/db/mgmadapter"
 	"github.com/kamva/hexa/hexatranslator"
 	"github.com/kamva/hexa/hlog"
-	faktory "github.com/contribsys/faktory/client"
-	worker "github.com/contribsys/faktory_worker_go"
-	"os"
 )
 
 type Payload struct {
@@ -25,7 +25,7 @@ func init() {
 
 var logger = hlog.NewPrinterDriver(hlog.DebugLevel)
 var translator = hexatranslator.NewEmptyDriver()
-var cExporter = hexa.NewCtxExporterImporter(hexa.NewUserExporterImporter(mgmadapter.EmptyID), logger, translator)
+var propagator = hexa.NewContextPropagator(logger, translator)
 var jobName = "example-job"
 
 func main() {
@@ -38,9 +38,15 @@ func send() {
 
 	gutil.PanicErr(err)
 
-	jobs := hexafaktory.NewFaktoryJobsDriver(client, cExporter)
+	jobs := hexafaktory.NewFaktoryJobsDriver(client, propagator)
 
-	ctx := hexa.NewCtx(nil, "test-correlation-id", "en", hexa.NewGuest(), logger, translator)
+	ctx := hexa.NewContext(hexa.ContextParams{
+		CorrelationId: "test-cron-correlation-id",
+		Locale:        "en",
+		User:          hexa.NewGuest(),
+		Logger:        logger,
+		Translator:    translator,
+	})
 
 	err = jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
 	gutil.PanicErr(err)
@@ -48,7 +54,7 @@ func send() {
 
 func serve() {
 	w := worker.NewManager()
-	server := hexafaktory.NewFaktoryWorkerDriver(w, cExporter)
+	server := hexafaktory.NewFaktoryWorkerDriver(w, propagator)
 
 	gutil.PanicErr(server.Register(jobName, Payload{}, sayHello))
 	gutil.PanicErr(server.Process("default"))
