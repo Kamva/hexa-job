@@ -40,7 +40,7 @@ func send() {
 
 	jobs := hexafaktory.NewFaktoryJobsDriver(client, propagator)
 
-	ctx := hexa.NewContext(hexa.ContextParams{
+	ctx := hexa.NewContext(nil,hexa.ContextParams{
 		CorrelationId: "test-cron-correlation-id",
 		Locale:        "en",
 		User:          hexa.NewGuest(),

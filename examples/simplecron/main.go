@@ -50,7 +50,7 @@ func main() {
 }
 
 func ctxGenerator() hexa.Context {
-	return hexa.NewContext(hexa.ContextParams{
+	return hexa.NewContext(nil,hexa.ContextParams{
 		CorrelationId: "test-cron-correlation-id",
 		Locale:        "en",
 		User:          hexa.NewGuest(),
