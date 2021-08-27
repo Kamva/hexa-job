@@ -21,6 +21,7 @@ type worker struct {
 	mux         *asynq.ServeMux
 	p           hexa.ContextPropagator
 	transformer Transformer
+	closeCh     chan struct{}
 }
 
 func NewJobs(cli *asynq.Client, p hexa.ContextPropagator, t Transformer) hjob.Jobs {
@@ -37,6 +38,7 @@ func NewWorker(s *asynq.Server, p hexa.ContextPropagator, t Transformer) hjob.Wo
 		mux:         asynq.NewServeMux(),
 		p:           p,
 		transformer: t,
+		closeCh:     make(chan struct{}),
 	}
 }
 
@@ -83,11 +85,30 @@ func (w *worker) Register(name string, handlerFunc hjob.JobHandlerFunc) error {
 }
 
 func (w *worker) Run() error {
-	return tracer.Trace(w.s.Run(w.mux))
+	// Currently we can not use the server's Run method,
+	// because the server in the `Run` method listen to
+	// signals to shutdown the server, but without any
+	// mutex, so when we get a sigterm,... it try to
+	// shutdown, while service registry listen to
+	// signals too and calls to its shutdown method
+	// again, we should wait for its fix that checks
+	// if user is shutting down, do not shutdown
+	// again to go not get any error.
+	// Currently we just simply use the start method.
+	// and wait for the closeCh to close.
+
+	//return tracer.Trace(w.s.Run(w.mux))
+	if err := w.s.Start(w.mux); err != nil {
+		return tracer.Trace(err)
+	}
+
+	<-w.closeCh
+	return nil
 }
 
 func (w *worker) Shutdown(ctx context.Context) error {
 	w.s.Shutdown()
+	close(w.closeCh)
 	return nil
 }
 
