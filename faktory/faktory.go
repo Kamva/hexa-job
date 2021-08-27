@@ -79,7 +79,12 @@ func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Pe
 		if err != nil {
 			return tracer.Trace(err)
 		}
-		return h(hexa.MustNewContextFromRawContext(c), payload)
+
+		hexaContext, err := hexa.NewContextFromRawContext(c)
+		if err != nil {
+			return tracer.Trace(err)
+		}
+		return h(hexaContext, payload)
 	}
 }
 
