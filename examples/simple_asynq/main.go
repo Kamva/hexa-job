@@ -7,7 +7,7 @@ import (
 	"github.com/kamva/gutil"
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
-	"github.com/kamva/hexa-job/hsyncq"
+	"github.com/kamva/hexa-job/hsynq"
 	"github.com/kamva/hexa/hexatranslator"
 	"github.com/kamva/hexa/hlog"
 	"github.com/kamva/tracer"
@@ -31,7 +31,7 @@ func main() {
 
 func send() {
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
-	jobs := hsyncq.NewJobs(client, propagator, hsyncq.NewJsonTransformer())
+	jobs := hsynq.NewJobs(client, propagator, hsynq.NewJsonTransformer())
 
 	ctx := hexa.NewContext(nil, hexa.ContextParams{
 		CorrelationId: "test-cron-correlation-id",
@@ -61,7 +61,7 @@ func serve() {
 		},
 	)
 
-	worker := hsyncq.NewWorker(srv, propagator, hsyncq.NewJsonTransformer())
+	worker := hsynq.NewWorker(srv, propagator, hsynq.NewJsonTransformer())
 
 	gutil.PanicErr(worker.Register(jobName, sayHello))
 	gutil.PanicErr(worker.Run())

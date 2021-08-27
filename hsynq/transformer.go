@@ -1,4 +1,4 @@
-package hsyncq
+package hsynq
 
 import (
 	"encoding/json"
