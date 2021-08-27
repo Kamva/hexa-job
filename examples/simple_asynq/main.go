@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
 
-	faktory "github.com/contribsys/faktory/client"
-	worker "github.com/contribsys/faktory_worker_go"
+	"github.com/hibiken/asynq"
 	"github.com/kamva/gutil"
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
-	hexafaktory "github.com/kamva/hexa-job/faktory"
+	"github.com/kamva/hexa-job/hsyncq"
 	"github.com/kamva/hexa/hexatranslator"
 	"github.com/kamva/hexa/hlog"
 	"github.com/kamva/tracer"
@@ -19,15 +17,12 @@ type Payload struct {
 	Name string `json:"name" mapstructure:"name"`
 }
 
-func init() {
-	_ = os.Setenv("FAKTORY_PROVIDER", "FAKTORY_URL")
-	_ = os.Setenv("FAKTORY_URL", "tcp://localhost:7419")
-}
-
 var logger = hlog.NewPrinterDriver(hlog.DebugLevel)
 var translator = hexatranslator.NewEmptyDriver()
 var propagator = hexa.NewContextPropagator(logger, translator)
 var jobName = "example-job"
+
+const redisAddr = "127.0.0.1:6379"
 
 func main() {
 	send()
@@ -35,11 +30,8 @@ func main() {
 }
 
 func send() {
-	client, err := faktory.NewPool(12)
-
-	gutil.PanicErr(err)
-
-	jobs := hexafaktory.NewFaktoryJobsDriver(client, propagator)
+	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
+	jobs := hsyncq.NewJobs(client, propagator, hsyncq.NewJsonTransformer())
 
 	ctx := hexa.NewContext(nil, hexa.ContextParams{
 		CorrelationId: "test-cron-correlation-id",
@@ -49,25 +41,40 @@ func send() {
 		Translator:    translator,
 	})
 
-	err = jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
+	err := jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
 	gutil.PanicErr(err)
 }
 
 func serve() {
-	w := worker.NewManager()
-	server := hexafaktory.NewFaktoryWorkerDriver(w, propagator)
+	srv := asynq.NewServer(
+		asynq.RedisClientOpt{Addr: redisAddr},
+		asynq.Config{
+			// Specify how many concurrent workers to use
+			Concurrency: 10,
+			// Optionally specify multiple queues with different priority.
+			Queues: map[string]int{
+				"critical": 6,
+				"default":  3,
+				"low":      1,
+			},
+			// See the godoc for other configuration options
+		},
+	)
 
-	gutil.PanicErr(server.Register(jobName, sayHello))
-	gutil.PanicErr(server.Run())
+	worker := hsyncq.NewWorker(srv, propagator, hsyncq.NewJsonTransformer())
+
+	gutil.PanicErr(worker.Register(jobName, sayHello))
+	gutil.PanicErr(worker.Run())
 }
 
 func sayHello(context hexa.Context, payload hjob.Payload) error {
 	fmt.Printf("%#v\n\n", context)
-	fmt.Printf("%#v\n\n", payload)
 	var p Payload
 	if err := payload.Decode(&p); err != nil {
 		return tracer.Trace(err)
 	}
+	fmt.Printf("%#v\n\n", p)
 	fmt.Printf("hello %s :) \n\n", p.Name)
+	//return errors.New("I want to return errorrrr")
 	return nil
 }

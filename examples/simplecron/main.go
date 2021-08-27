@@ -45,12 +45,12 @@ func main() {
 	})
 
 	gutil.PanicErr(cronJobs.Register("@every 3s", hjob.NewCronJob(cronJobName), sayHello))
-	gutil.PanicErr(cronJobs.Start())
-	gutil.PanicErr(jobWorker.Process("default"))
+	gutil.PanicErr(cronJobs.Run())
+	gutil.PanicErr(jobWorker.Run())
 }
 
 func ctxGenerator() hexa.Context {
-	return hexa.NewContext(nil,hexa.ContextParams{
+	return hexa.NewContext(nil, hexa.ContextParams{
 		CorrelationId: "test-cron-correlation-id",
 		Locale:        "en",
 		User:          hexa.NewGuest(),

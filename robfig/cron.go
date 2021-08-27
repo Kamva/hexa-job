@@ -2,9 +2,11 @@ package hexarobfig
 
 import (
 	"context"
+
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
 	"github.com/kamva/hexa/hlog"
+	"github.com/kamva/hexa/sr"
 	"github.com/kamva/tracer"
 	"github.com/robfig/cron/v3"
 )
@@ -43,13 +45,14 @@ func (c *cronJobs) Register(spec string, cJob *hjob.CronJob, handler hjob.CronJo
 	return c.registerJobHandler(cJob.Name, handler)
 }
 
-func (c *cronJobs) Start() error {
-	c.cron.Start()
+func (c *cronJobs) Run() error {
+	c.cron.Run()
 	return nil
 }
 
-func (c *cronJobs) Stop() (error, context.Context) {
-	return nil, c.cron.Stop()
+func (c *cronJobs) Shutdown(_ context.Context) error {
+	c.cron.Stop()
+	return nil
 }
 
 // addCron sets the cron job to push new job on each call to cron-job handler
@@ -66,7 +69,7 @@ func (c *cronJobs) addCron(spec string, cJob *hjob.CronJob, handler hjob.CronJob
 
 // registerJobHandler sets the job handler.
 func (c *cronJobs) registerJobHandler(jobName string, handler hjob.CronJobHandlerFunc) error {
-	return c.worker.Register(jobName, emptyPayload{}, func(ctx hexa.Context, payload interface{}) error {
+	return c.worker.Register(jobName, func(ctx hexa.Context, payload hjob.Payload) error {
 		return handler(ctx)
 	})
 }
@@ -101,3 +104,5 @@ func New(options CronJobsOptions) hjob.CronJobs {
 
 // Assertion
 var _ hjob.CronJobs = &cronJobs{}
+var _ sr.Runnable = &cronJobs{}
+var _ sr.Shutdownable = &cronJobs{}

@@ -24,13 +24,10 @@ type (
 	worker struct {
 		w *faktoryworker.Manager
 		p hexa.ContextPropagator
-		// payloadInstances keep instance type of the payload base on each event name.
-		payloadInstances hexa.Map
 	}
 )
 
 func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
-
 	if job.Queue == "" {
 		job.Queue = "default"
 	}
@@ -43,6 +40,7 @@ func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
 		Args:      []interface{}{ctxData, gutil.StructToMap(job.Payload)},
 		CreatedAt: time.Now().UTC().Format(time.RFC3339Nano),
 		Retry:     job.Retry,
+
 		// We don't using this custom data in any middleware, but just put it here :)
 		Custom: bytesMapToInterfaceMap(ctxData),
 	}
@@ -59,23 +57,16 @@ func (j *jobs) Push(ctx hexa.Context, job *hjob.Job) error {
 }
 
 func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Perform {
-	return func(_ context.Context, args ...interface{}) error {
-		var payload, err = gutil.ValuePtr(w.payloadInstances[jobName])
-		if err != nil {
-			return err
-		}
+	return func(ctx context.Context, args ...interface{}) error {
 		ctxMap := args[0].(map[string]interface{})
-		err = gutil.MapToStruct(args[1].(map[string]interface{}), payload)
+		payload := newMapPayload(args[1].(map[string]interface{}))
 
-		if err != nil {
-			return tracer.Trace(err)
-		}
 		bytesMap, err := interfaceMapToBytesMap(ctxMap)
 		if err != nil {
 			return tracer.Trace(err)
 		}
 
-		c, err := w.p.Inject(bytesMap, context.Background())
+		c, err := w.p.Inject(bytesMap, ctx)
 		if err != nil {
 			return tracer.Trace(err)
 		}
@@ -88,19 +79,12 @@ func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Pe
 	}
 }
 
-func (w *worker) Register(name string, payloadInstance interface{}, h hjob.JobHandlerFunc) error {
-	w.payloadInstances[name] = payloadInstance
+func (w *worker) Register(name string, h hjob.JobHandlerFunc) error {
 	w.w.Register(name, w.handler(name, h))
 	return nil
 }
 
-func (w *worker) Concurrency(c int) error {
-	w.w.Concurrency = c
-	return nil
-}
-
-func (w *worker) Process(queues ...string) error {
-	w.w.ProcessStrictPriorityQueues(queues...)
+func (w *worker) Run() error {
 	// Run method does not return.
 	w.w.Run()
 
@@ -115,9 +99,8 @@ func NewFaktoryJobsDriver(p *client.Pool, propagator hexa.ContextPropagator) hjo
 // NewFaktoryWorkerDriver returns new instance of hexa Worker driver for the faktory
 func NewFaktoryWorkerDriver(w *faktoryworker.Manager, propagator hexa.ContextPropagator) hjob.Worker {
 	return &worker{
-		w:                w,
-		p:                propagator,
-		payloadInstances: make(hexa.Map),
+		w: w,
+		p: propagator,
 	}
 }
 

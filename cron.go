@@ -1,8 +1,8 @@
 package hjob
 
 import (
-	"context"
 	"github.com/kamva/hexa"
+	"github.com/kamva/hexa/sr"
 )
 
 type (
@@ -23,8 +23,7 @@ type (
 	CronJobs interface {
 		// Register handler for new cron job
 		Register(spec string, cJob *CronJob, handler CronJobHandlerFunc) error
-		Start() error
-		Stop() (error, context.Context)
+		sr.Runnable
 	}
 )
 

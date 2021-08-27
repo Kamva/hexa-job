@@ -1,46 +1,48 @@
-//--------------------------------
-// Worker contains interfaces to
+// Package hjob contains interfaces to
 // define workers to process background
 // jobs.
 //--------------------------------
 package hjob
 
-import "github.com/kamva/hexa"
+import (
+	"encoding/json"
+	"time"
 
-type (
-
-	// JobHandlerFunc is the handler of each job in the worker.
-	JobHandlerFunc func(ctx hexa.Context, payload interface{}) error
-
-	// Job is a new instance of job to push to the queue by Jobs interface
-	Job struct {
-		Name  string // required
-		Queue string
-		// Retry specify retry counts of the job.
-		// 0: means that throw job away (and dont push to dead queue) on first fail.
-		// -1: means that push job to the dead queue on first fail.
-		Retry   int
-		Payload interface{} // It can be any struct.
-	}
-
-	// Worker is the background jobs worker
-	Worker interface {
-		// Register handler for new job
-		Register(name string, payloadInstance interface{}, handlerFunc JobHandlerFunc) error
-
-		// Set worker concurrency
-		Concurrency(c int) error
-
-		// start process on some queues
-		Process(queues ...string) error
-	}
-
-	// Jobs pushes jobs to process by worker.
-	Jobs interface {
-		// Push push job to the default queue
-		Push(hexa.Context, *Job) error
-	}
+	"github.com/kamva/hexa"
+	"github.com/kamva/hexa/sr"
 )
+
+// JobHandlerFunc is the handler of each job in the worker.
+type JobHandlerFunc func(hexa.Context, Payload) error
+
+type Payload interface {
+	Decode(payload interface{}) error
+}
+
+// Job is a new instance of job to push to the queue by Jobs interface
+type Job struct {
+	Name  string // required
+	Queue string
+	// Retry specify retry counts of the job.
+	// 0: means that throw job away (and dont push to dead queue) on first fail.
+	// -1: means that push job to the dead queue on first fail.
+	Retry   int
+	Timeout time.Duration
+	Payload interface{} // It can be any struct.
+}
+
+// Worker is the background jobs worker
+type Worker interface {
+	// Register handler for new job
+	Register(name string, handlerFunc JobHandlerFunc) error
+	sr.Runnable
+}
+
+// Jobs pushes jobs to process by worker.
+type Jobs interface {
+	// Push push job to the default queue
+	Push(hexa.Context, *Job) error
+}
 
 // NewJob returns new job instance
 func NewJob(name string, payload interface{}) *Job {
@@ -53,6 +55,25 @@ func NewJobWithQueue(name string, queue string, p interface{}) *Job {
 		Name:    name,
 		Queue:   queue,
 		Retry:   4,
+		Timeout: time.Minute * 30,
 		Payload: p,
 	}
 }
+
+//--------------------------------
+// Json payload implementation
+//--------------------------------
+
+type jsonPayload struct {
+	p []byte
+}
+
+func (j *jsonPayload) Decode(val interface{}) error {
+	return json.Unmarshal(j.p, val)
+}
+
+func NewJsonPayload(p []byte) Payload {
+	return &jsonPayload{p: p}
+}
+
+var _ Payload = &jsonPayload{}
