@@ -7,7 +7,6 @@ import (
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
 	"github.com/kamva/hexa/hlog"
-	"github.com/kamva/hexa/sr"
 	"github.com/kamva/tracer"
 )
 
@@ -93,5 +92,5 @@ func (w *worker) Shutdown(ctx context.Context) error {
 }
 
 var _ hjob.Jobs = &jobs{}
-var _ sr.Shutdownable = &jobs{}
-var _ sr.Shutdownable = &worker{}
+var _ hexa.Shutdownable = &jobs{}
+var _ hexa.Shutdownable = &worker{}

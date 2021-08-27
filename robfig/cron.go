@@ -6,7 +6,6 @@ import (
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
 	"github.com/kamva/hexa/hlog"
-	"github.com/kamva/hexa/sr"
 	"github.com/kamva/tracer"
 	"github.com/robfig/cron/v3"
 )
@@ -104,5 +103,5 @@ func New(options CronJobsOptions) hjob.CronJobs {
 
 // Assertion
 var _ hjob.CronJobs = &cronJobs{}
-var _ sr.Runnable = &cronJobs{}
-var _ sr.Shutdownable = &cronJobs{}
+var _ hexa.Runnable = &cronJobs{}
+var _ hexa.Shutdownable = &cronJobs{}

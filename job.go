@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/kamva/hexa"
-	"github.com/kamva/hexa/sr"
 )
 
 // JobHandlerFunc is the handler of each job in the worker.
@@ -35,7 +34,7 @@ type Job struct {
 type Worker interface {
 	// Register handler for new job
 	Register(name string, handlerFunc JobHandlerFunc) error
-	sr.Runnable
+	hexa.Runnable
 }
 
 // Jobs pushes jobs to process by worker.
