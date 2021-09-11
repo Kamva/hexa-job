@@ -32,7 +32,7 @@ func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
 		job.Queue = "default"
 	}
 
-	ctxData, _ := j.propagator.Extract(c)
+	ctxData, _ := j.propagator.Inject(c)
 	return &client.Job{
 		Jid:       client.RandomJid(),
 		Type:      job.Name,
@@ -66,7 +66,7 @@ func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Pe
 			return tracer.Trace(err)
 		}
 
-		c, err := w.p.Inject(bytesMap, ctx)
+		c, err := w.p.Extract(ctx,bytesMap)
 		if err != nil {
 			return tracer.Trace(err)
 		}

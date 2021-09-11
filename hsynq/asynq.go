@@ -43,7 +43,7 @@ func NewWorker(s *asynq.Server, p hexa.ContextPropagator, t Transformer) hjob.Wo
 }
 
 func (j *jobs) Push(c hexa.Context, job *hjob.Job) error {
-	ctxData, err := j.p.Extract(c)
+	ctxData, err := j.p.Inject(c)
 	if err != nil {
 		return tracer.Trace(err)
 	}
@@ -66,7 +66,7 @@ func (w *worker) Register(name string, handlerFunc hjob.JobHandlerFunc) error {
 			return tracer.Trace(err)
 		}
 
-		ctx, err = w.p.Inject(headers, ctx)
+		ctx, err = w.p.Extract(ctx,headers)
 		if err != nil {
 			return tracer.Trace(err)
 		}
