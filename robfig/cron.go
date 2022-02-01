@@ -10,98 +10,42 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-type (
-	// CronJobsOptions is the options that can provide on
-	// create new cron job registerer to push cron jobs.
-	CronJobsOptions struct {
-		CtxGenerator CronJobCtxGenerator
-		Cron         *cron.Cron
-		Jobs         hjob.Jobs
-		Worker       hjob.Worker
-		Logger       hexa.Logger // optional
-	}
-
-	// CronJobCtxGenerator is a generator to generate new context to push as job's context.
-	CronJobCtxGenerator func() hexa.Context
-
-	// emptyPayload is just a empty payload as each job's payload.
-	emptyPayload struct{}
-
-	// cronJobs implements the hjob.CronJobs interface.
-	cronJobs struct {
-		ctxGenerator CronJobCtxGenerator
-		logger       hexa.Logger
-		cron         *cron.Cron
-		jobs         hjob.Jobs
-		worker       hjob.Worker
-	}
-)
-
-func (c *cronJobs) Register(spec string, cJob *hjob.CronJob, handler hjob.CronJobHandlerFunc) error {
-	if err := c.addCron(spec, cJob, handler); err != nil {
-		return err
-	}
-	return c.registerJobHandler(cJob.Name, handler)
+// cronJob implements hjob.CronJobs interface.
+type cronJob struct {
+	ctxGenerator ContextGenerator
+	cron         *cron.Cron
 }
 
-func (c *cronJobs) Run() error {
-	c.cron.Run()
-	return nil
-}
-
-func (c *cronJobs) Shutdown(_ context.Context) error {
-	c.cron.Stop()
-	return nil
-}
-
-// addCron sets the cron job to push new job on each call to cron-job handler
-func (c *cronJobs) addCron(spec string, cJob *hjob.CronJob, handler hjob.CronJobHandlerFunc) error {
+func (c *cronJob) Register(spec string, cJob *hjob.CronJob, handler hjob.CronJobHandlerFunc) error {
 	_, err := c.cron.AddFunc(spec, func() {
-		err := c.jobs.Push(c.ctxGenerator(), c.job(cJob))
+		err := handler(c.ctxGenerator())
 		if err != nil {
-			c.reportFailedPush(cJob)
+			hlog.Error("failed cron job", hlog.ErrStack(err))
 		}
 	})
 
 	return tracer.Trace(err)
 }
 
-// registerJobHandler sets the job handler.
-func (c *cronJobs) registerJobHandler(jobName string, handler hjob.CronJobHandlerFunc) error {
-	return c.worker.Register(jobName, func(ctx hexa.Context, payload hjob.Payload) error {
-		return handler(ctx)
-	})
+func (c *cronJob) Run() error {
+	c.cron.Run()
+	return nil
 }
 
-// job convert Cron job to a regular job.
-func (c *cronJobs) job(job *hjob.CronJob) *hjob.Job {
-	return &hjob.Job{
-		Name:    job.Name,
-		Queue:   job.Queue,
-		Retry:   job.Retry,
-		Payload: emptyPayload{},
-	}
+func (c *cronJob) Shutdown(_ context.Context) error {
+	c.cron.Stop()
+	return nil
 }
 
-func (c *cronJobs) reportFailedPush(job *hjob.CronJob) {
-	if c.logger != nil {
-		c.logger.Error("failed to push cron job to the jobs service.",
-			hlog.String("job_queue", job.Queue), hlog.String("job_name", job.Name))
-	}
-}
-
-// New returns new instance of the Cron Jobs
-func New(options CronJobsOptions) hjob.CronJobs {
-	return &cronJobs{
-		ctxGenerator: options.CtxGenerator,
-		logger:       options.Logger,
-		cron:         options.Cron,
-		jobs:         options.Jobs,
-		worker:       options.Worker,
+// New returns new instance of the Cron Jobs.
+func New(cg ContextGenerator, cron *cron.Cron) hjob.CronJobs {
+	return &cronJob{
+		ctxGenerator: cg,
+		cron:         cron,
 	}
 }
 
 // Assertion
-var _ hjob.CronJobs = &cronJobs{}
-var _ hexa.Runnable = &cronJobs{}
-var _ hexa.Shutdownable = &cronJobs{}
+var _ hjob.CronJobs = &cronJob{}
+var _ hexa.Runnable = &cronJob{}
+var _ hexa.Shutdownable = &cronJob{}
