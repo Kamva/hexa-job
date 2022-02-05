@@ -18,7 +18,7 @@ type cronJob struct {
 
 func (c *cronJob) Register(spec string, cJob *hjob.CronJob, handler hjob.CronJobHandlerFunc) error {
 	_, err := c.cron.AddFunc(spec, func() {
-		err := handler(c.ctxGenerator())
+		err := handler(c.ctxGenerator(context.Background()))
 		if err != nil {
 			hlog.Error("failed cron job", hlog.ErrStack(err))
 		}

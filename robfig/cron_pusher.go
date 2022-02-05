@@ -22,7 +22,7 @@ type (
 	}
 
 	// ContextGenerator is a generator to generate new context to push as job's context.
-	ContextGenerator func() hexa.Context
+	ContextGenerator func(ctx context.Context) hexa.Context
 
 	// emptyPayload is just a empty payload as each job's payload.
 	emptyPayload struct{}
@@ -57,7 +57,7 @@ func (c *cronJobPusher) Shutdown(_ context.Context) error {
 // addCron sets the cron job to push new job on each call to cron-job handler
 func (c *cronJobPusher) addCron(spec string, cJob *hjob.CronJob, handler hjob.CronJobHandlerFunc) error {
 	_, err := c.cron.AddFunc(spec, func() {
-		err := c.jobs.Push(c.ctxGenerator(), c.job(cJob))
+		err := c.jobs.Push(c.ctxGenerator(context.Background()), c.job(cJob))
 		if err != nil {
 			c.reportFailedPush(cJob)
 		}

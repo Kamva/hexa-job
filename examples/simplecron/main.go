@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -27,8 +28,8 @@ func main() {
 	gutil.PanicErr(cronJobs.Run())
 }
 
-func ctxGenerator() hexa.Context {
-	return hexa.NewContext(nil, hexa.ContextParams{
+func ctxGenerator(c context.Context) hexa.Context {
+	return hexa.NewContext(c, hexa.ContextParams{
 		CorrelationId: "test-cron-correlation-id",
 		Locale:        "en",
 		User:          hexa.NewGuest(),
