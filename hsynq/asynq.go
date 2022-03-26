@@ -42,7 +42,7 @@ func NewWorker(s *asynq.Server, p hexa.ContextPropagator, t Transformer) hjob.Wo
 	}
 }
 
-func (j *jobs) Push(c hexa.Context, job *hjob.Job) error {
+func (j *jobs) Push(c context.Context, job *hjob.Job) error {
 	ctxData, err := j.p.Inject(c)
 	if err != nil {
 		return tracer.Trace(err)
@@ -66,17 +66,13 @@ func (w *worker) Register(name string, handlerFunc hjob.JobHandlerFunc) error {
 			return tracer.Trace(err)
 		}
 
-		ctx, err = w.p.Extract(ctx,headers)
+		ctx, err = w.p.Extract(ctx, headers)
 		if err != nil {
 			return tracer.Trace(err)
 		}
-		hexaContext, err := hexa.NewContextFromRawContext(ctx)
+		err = tracer.Trace(handlerFunc(ctx, p))
 		if err != nil {
-			return tracer.Trace(err)
-		}
-		err = tracer.Trace(handlerFunc(hexaContext, p))
-		if err != nil {
-			hexaContext.Logger().Error("error in handling queue task", hlog.ErrFields(err)...)
+			hlog.CtxLogger(ctx).Error("error in handling queue task", hlog.ErrFields(err)...)
 		}
 		return err
 	})

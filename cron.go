@@ -1,12 +1,14 @@
 package hjob
 
 import (
+	"context"
+
 	"github.com/kamva/hexa"
 )
 
 type (
 	// CronJobHandlerFunc is the handler of each cron job in the worker.
-	CronJobHandlerFunc func(ctx hexa.Context) error
+	CronJobHandlerFunc func(ctx context.Context) error
 
 	// CronJob is a new instance of cron job that should run in schedules time.
 	CronJob struct {

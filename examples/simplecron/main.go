@@ -28,18 +28,18 @@ func main() {
 	gutil.PanicErr(cronJobs.Run())
 }
 
-func ctxGenerator(c context.Context) hexa.Context {
+func ctxGenerator(c context.Context) context.Context {
 	return hexa.NewContext(c, hexa.ContextParams{
-		CorrelationId: "test-cron-correlation-id",
-		Locale:        "en",
-		User:          hexa.NewGuest(),
-		Logger:        logger,
-		Translator:    translator,
+		CorrelationId:  "test-cron-correlation-id",
+		Locale:         "en",
+		User:           hexa.NewGuest(),
+		BaseLogger:     logger,
+		BaseTranslator: translator,
 	})
 }
 
-func sayHello(ctx hexa.Context) error {
+func sayHello(ctx context.Context) error {
 	fmt.Println("hello from cron job :) at:", time.Now())
-	fmt.Println(ctx.CorrelationID())
+	fmt.Println(hexa.CtxCorrelationId(ctx))
 	return nil
 }

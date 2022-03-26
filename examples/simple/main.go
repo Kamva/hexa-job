@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -45,8 +46,8 @@ func send() {
 		CorrelationId: "test-cron-correlation-id",
 		Locale:        "en",
 		User:          hexa.NewGuest(),
-		Logger:        logger,
-		Translator:    translator,
+		BaseLogger:        logger,
+		BaseTranslator:    translator,
 	})
 
 	err = jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
@@ -61,7 +62,7 @@ func serve() {
 	gutil.PanicErr(server.Run())
 }
 
-func sayHello(context hexa.Context, payload hjob.Payload) error {
+func sayHello(context context.Context, payload hjob.Payload) error {
 	fmt.Printf("%#v\n\n", context)
 	fmt.Printf("%#v\n\n", payload)
 	var p Payload

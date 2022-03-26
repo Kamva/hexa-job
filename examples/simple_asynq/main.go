@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hibiken/asynq"
@@ -34,11 +35,11 @@ func send() {
 	jobs := hsynq.NewJobs(client, propagator, hsynq.NewJsonTransformer())
 
 	ctx := hexa.NewContext(nil, hexa.ContextParams{
-		CorrelationId: "test-cron-correlation-id",
-		Locale:        "en",
-		User:          hexa.NewGuest(),
-		Logger:        logger,
-		Translator:    translator,
+		CorrelationId:  "test-cron-correlation-id",
+		Locale:         "en",
+		User:           hexa.NewGuest(),
+		BaseLogger:     logger,
+		BaseTranslator: translator,
 	})
 
 	err := jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
@@ -67,7 +68,7 @@ func serve() {
 	gutil.PanicErr(worker.Run())
 }
 
-func sayHello(context hexa.Context, payload hjob.Payload) error {
+func sayHello(context context.Context, payload hjob.Payload) error {
 	fmt.Printf("%#v\n\n", context)
 	var p Payload
 	if err := payload.Decode(&p); err != nil {

@@ -5,6 +5,7 @@
 package hjob
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 )
 
 // JobHandlerFunc is the handler of each job in the worker.
-type JobHandlerFunc func(hexa.Context, Payload) error
+type JobHandlerFunc func(context.Context, Payload) error
 
 type Payload interface {
 	Decode(payload interface{}) error
@@ -40,7 +41,7 @@ type Worker interface {
 // Jobs pushes jobs to process by worker.
 type Jobs interface {
 	// Push push job to the default queue
-	Push(hexa.Context, *Job) error
+	Push(context.Context, *Job) error
 }
 
 // NewJob returns new job instance

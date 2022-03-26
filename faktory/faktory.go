@@ -27,7 +27,7 @@ type (
 	}
 )
 
-func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
+func (j *jobs) prepare(c context.Context, job *hjob.Job) *client.Job {
 	if job.Queue == "" {
 		job.Queue = "default"
 	}
@@ -46,7 +46,7 @@ func (j *jobs) prepare(c hexa.Context, job *hjob.Job) *client.Job {
 	}
 }
 
-func (j *jobs) Push(ctx hexa.Context, job *hjob.Job) error {
+func (j *jobs) Push(ctx context.Context, job *hjob.Job) error {
 	if job == nil || job.Name == "" {
 		return tracer.Trace(errors.New("job is not valid (enter job name please)"))
 	}
@@ -66,16 +66,12 @@ func (w *worker) handler(jobName string, h hjob.JobHandlerFunc) faktoryworker.Pe
 			return tracer.Trace(err)
 		}
 
-		c, err := w.p.Extract(ctx,bytesMap)
+		c, err := w.p.Extract(ctx, bytesMap)
 		if err != nil {
 			return tracer.Trace(err)
 		}
 
-		hexaContext, err := hexa.NewContextFromRawContext(c)
-		if err != nil {
-			return tracer.Trace(err)
-		}
-		return h(hexaContext, payload)
+		return h(c, payload)
 	}
 }
 
