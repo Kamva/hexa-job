@@ -39,7 +39,7 @@ func (j *jobs) prepare(c context.Context, job *hjob.Job) *client.Job {
 		Queue:     job.Queue,
 		Args:      []interface{}{ctxData, gutil.StructToMap(job.Payload)},
 		CreatedAt: time.Now().UTC().Format(time.RFC3339Nano),
-		Retry:     job.Retry,
+		Retry:     &job.Retry,
 
 		// We don't using this custom data in any middleware, but just put it here :)
 		Custom: bytesMapToInterfaceMap(ctxData),
