@@ -18,7 +18,7 @@ type (
 		Cron         *cron.Cron
 		Jobs         hjob.Jobs
 		Worker       hjob.Worker
-		Logger       hexa.Logger // optional
+		Logger       hlog.Logger // optional
 	}
 
 	// ContextGenerator is a generator to generate new context to push as job's context.
@@ -30,7 +30,7 @@ type (
 	// cronJobPusher implements the hjob.CronJobs interface by pushing each cronJob into a job queue.
 	cronJobPusher struct {
 		ctxGenerator ContextGenerator
-		logger       hexa.Logger
+		logger       hlog.Logger
 		cron         *cron.Cron
 		jobs         hjob.Jobs
 		worker       hjob.Worker

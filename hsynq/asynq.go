@@ -6,7 +6,6 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/kamva/hexa"
 	hjob "github.com/kamva/hexa-job"
-	"github.com/kamva/hexa/hlog"
 	"github.com/kamva/tracer"
 )
 
@@ -72,7 +71,7 @@ func (w *worker) Register(name string, handlerFunc hjob.JobHandlerFunc) error {
 		}
 		err = tracer.Trace(handlerFunc(ctx, p))
 		if err != nil {
-			hlog.CtxLogger(ctx).Error("error in handling queue task", hlog.ErrFields(err)...)
+			hexa.Logger(ctx).Error("error in handling queue task", hexa.ErrFields(err)...)
 		}
 		return err
 	})
