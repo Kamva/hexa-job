@@ -25,7 +25,9 @@ func main() {
 	cronJobs := hexarobfig.New(ctxGenerator, cronInstance)
 
 	gutil.PanicErr(cronJobs.Register("@every 3s", hjob.NewCronJob(cronJobName), sayHello))
-	gutil.PanicErr(cronJobs.Run())
+	done, err := cronJobs.Run()
+	gutil.PanicErr(err)
+	gutil.PanicErr(<-done)
 }
 
 func ctxGenerator(c context.Context) context.Context {

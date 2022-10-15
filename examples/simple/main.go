@@ -43,11 +43,11 @@ func send() {
 	jobs := hexafaktory.NewFaktoryJobsDriver(client, propagator)
 
 	ctx := hexa.NewContext(nil, hexa.ContextParams{
-		CorrelationId: "test-cron-correlation-id",
-		Locale:        "en",
-		User:          hexa.NewGuest(),
-		BaseLogger:        logger,
-		BaseTranslator:    translator,
+		CorrelationId:  "test-cron-correlation-id",
+		Locale:         "en",
+		User:           hexa.NewGuest(),
+		BaseLogger:     logger,
+		BaseTranslator: translator,
 	})
 
 	err = jobs.Push(ctx, hjob.NewJob(jobName, Payload{Name: "mehran"}))
@@ -59,7 +59,10 @@ func serve() {
 	server := hexafaktory.NewFaktoryWorkerDriver(w, propagator)
 
 	gutil.PanicErr(server.Register(jobName, sayHello))
-	gutil.PanicErr(server.Run())
+	done, err := server.Run()
+
+	gutil.PanicErr(err)
+	gutil.PanicErr(<-done)
 }
 
 func sayHello(context context.Context, payload hjob.Payload) error {

@@ -7,7 +7,7 @@ require (
 	github.com/contribsys/faktory_worker_go v1.6.0
 	github.com/hibiken/asynq v0.18.4
 	github.com/kamva/gutil v0.0.0-20210827084201-35b6a3421580
-	github.com/kamva/hexa v0.0.0-20220821205325-ac27273ade86
+	github.com/kamva/hexa v0.1.1-0.20221015212329-9cb6c3ee36a4
 	github.com/kamva/tracer v0.0.0-20201115122932-ea39052d56cd
 	github.com/robfig/cron/v3 v3.0.1
 )

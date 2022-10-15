@@ -49,6 +49,8 @@ github.com/kamva/gutil v0.0.0-20210827084201-35b6a3421580 h1:YNVqKgUtekv53gpKWFx
 github.com/kamva/gutil v0.0.0-20210827084201-35b6a3421580/go.mod h1:+yeJ+Y3R35PgqbWDx9BecACSsOLC3gGQ/Ef5hre00ds=
 github.com/kamva/hexa v0.0.0-20220821205325-ac27273ade86 h1:tlNi9x/mHffYLpcaaTNeCwjmlUDCsl1Pyzthxh7x+6k=
 github.com/kamva/hexa v0.0.0-20220821205325-ac27273ade86/go.mod h1:AJ/6TiObRVKfW5lHY33NF8Ms0cphMQQosiFZQCRzAm0=
+github.com/kamva/hexa v0.1.1-0.20221015212329-9cb6c3ee36a4 h1:dXaYXGya9IjBYIfcpQrAYri2o92rBdEnj6BHT/kb8Mg=
+github.com/kamva/hexa v0.1.1-0.20221015212329-9cb6c3ee36a4/go.mod h1:AJ/6TiObRVKfW5lHY33NF8Ms0cphMQQosiFZQCRzAm0=
 github.com/kamva/tracer v0.0.0-20201115122932-ea39052d56cd h1:Wa2QzkBIqaWTsWb9gVtQxijZqweUXKkakFLhXOacG5k=
 github.com/kamva/tracer v0.0.0-20201115122932-ea39052d56cd/go.mod h1:6TmvuXxFe7FD95QvNyIVEt2ZPfYBk3QiKGhGt+UwFbQ=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

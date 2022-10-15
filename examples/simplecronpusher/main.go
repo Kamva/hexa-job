@@ -46,8 +46,11 @@ func main() {
 	})
 
 	gutil.PanicErr(cronJobs.Register("@every 3s", hjob.NewCronJob(cronJobName), sayHello))
-	gutil.PanicErr(cronJobs.Run())
-	gutil.PanicErr(jobWorker.Run())
+	_, err = cronJobs.Run()
+	gutil.PanicErr(err)
+	workerCloseCh, err := jobWorker.Run()
+	gutil.PanicErr(err)
+	gutil.PanicErr(<-workerCloseCh)
 }
 
 func ctxGenerator(ctx context.Context) context.Context {

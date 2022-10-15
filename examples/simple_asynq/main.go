@@ -65,7 +65,9 @@ func serve() {
 	worker := hsynq.NewWorker(srv, propagator, hsynq.NewJsonTransformer())
 
 	gutil.PanicErr(worker.Register(jobName, sayHello))
-	gutil.PanicErr(worker.Run())
+	done, err := worker.Run()
+	gutil.PanicErr(err)
+	gutil.PanicErr(<-done)
 }
 
 func sayHello(context context.Context, payload hjob.Payload) error {
