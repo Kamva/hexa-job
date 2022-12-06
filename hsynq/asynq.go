@@ -50,7 +50,12 @@ func (j *jobs) Push(c context.Context, job *hjob.Job) error {
 	if err != nil {
 		return tracer.Trace(err)
 	}
-	_, err = j.cli.Enqueue(asynq.NewTask(job.Name, b), asynq.Queue(job.Queue), asynq.MaxRetry(job.Retry), asynq.Timeout(job.Timeout))
+	opts := []asynq.Option{asynq.Queue(job.Queue), asynq.MaxRetry(job.Retry), asynq.Timeout(job.Timeout)}
+	if job.ProcessAt != nil {
+		opts = append(opts, asynq.ProcessAt(*job.ProcessAt))
+	}
+
+	_, err = j.cli.Enqueue(asynq.NewTask(job.Name, b), opts...)
 	return tracer.Trace(err)
 }
 

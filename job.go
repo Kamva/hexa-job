@@ -26,9 +26,10 @@ type Job struct {
 	// Retry specify retry counts of the job.
 	// 0: means that throw job away (and dont push to dead queue) on first fail.
 	// -1: means that push job to the dead queue on first fail.
-	Retry   int
-	Timeout time.Duration
-	Payload interface{} // It can be any struct.
+	Retry     int
+	Timeout   time.Duration
+	ProcessAt *time.Time  // Process the job at specific time.
+	Payload   interface{} // It can be any struct.
 }
 
 // Worker is the background jobs worker
